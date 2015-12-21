@@ -146,14 +146,14 @@ class nagios::nrpe::config (
   }
 
   case $::operatingsystem {
-    'RHEL', 'CentOS' : {
+    'RHEL', 'CentOS', 'RedHat' : {
       firewall { '200 allow nrpe access':
         dport  => [5666],
         proto  => tcp,
         action => accept,
       }
     }
-    default          : {
+    default                    : {
     }
   }
 
