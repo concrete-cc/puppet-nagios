@@ -43,7 +43,7 @@
 #   Not required.
 #
 # [*mode*]
-#   days or seconds
+#   days or minutes. Default is "days", "min" for this parameters activates "minutes" mode
 #
 # [*has_parent*]
 #   Whether this folder has a parent service dependency (eg a mount).
@@ -127,7 +127,8 @@ define nagios::nrpe::file_ages (
   }
   $mode_string = $mode ? {
     ''      => '',
-    default => '-m '
+    'min'   => '-m',
+    default => ''
   }
 
   # I will leave trailing _ but this is by far the easiest way to get this to
