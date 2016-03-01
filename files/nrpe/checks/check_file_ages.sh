@@ -110,7 +110,7 @@ if [ $WARNING -gt $CRITICAL ]; then
 fi
 
 #Checks to see if valid directory
-if [ ! -d $DIRECTORY ] ; then
+if [ ! -d $DIRECTORY ]; then
 	echo "UNKNOWN - $DIRECTORY is not a valid directory" >&2
 	ARGUMENTFLAG=true
 fi
