@@ -47,7 +47,7 @@ RECURSE="-maxdepth 1"
 EXTENSION=""
 FILTER=""
 MODE="time"
-while getopts "d:w:c:t:a:e:f:m:r" OPT; do
+while getopts "d:w:c:t:a:e:f:mr" OPT; do
 	case $OPT in
 		"d") DIRECTORY=$OPTARG
 		DIRECTORYFLAG=true
