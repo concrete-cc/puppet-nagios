@@ -29,6 +29,8 @@ function help {
 
 	-f = filter. name or fragment of a name to check for. Not required
 
+	-m = warning and critical are in minutes not days which is the default
+
  	-h = This help
 	"
 	exit -1
@@ -44,7 +46,8 @@ NUMBER=1
 RECURSE="-maxdepth 1"
 EXTENSION=""
 FILTER=""
-while getopts "d:w:c:t:a:e:f:r" OPT; do
+MODE="time"
+while getopts "d:w:c:t:a:e:f:mr" OPT; do
 	case $OPT in
 		"d") DIRECTORY=$OPTARG
 		DIRECTORYFLAG=true
@@ -64,6 +67,8 @@ while getopts "d:w:c:t:a:e:f:r" OPT; do
 		;;
 		"f") FILTER=" -name *${OPTARG}* "
 			MSGFIL="(Filter:*${OPTARG}*) "
+		;;
+		"m") MODE="min"
 		;;
 		"t") if [ $OPTARG == "file" ]; then
 			TYPE="-type f"
@@ -116,8 +121,8 @@ fi
 
 # ----------FILE COUNT CALCULATION-----------
 
-FILE_COUNT_WARNING="find $DIRECTORY $RECURSE -mindepth 1 -mtime -$WARNING $TYPE $FILTER"
-FILE_COUNT_CRITICAL="find $DIRECTORY $RECURSE -mindepth 1 -mtime -$CRITICAL $TYPE $FILTER"
+FILE_COUNT_WARNING="find $DIRECTORY $RECURSE -mindepth 1 -m$MODE -$WARNING $TYPE $FILTER"
+FILE_COUNT_CRITICAL="find $DIRECTORY $RECURSE -mindepth 1 -m$MODE -$CRITICAL $TYPE $FILTER"
 
 if [ -z $EXTENSION ]; then
 	FILE_COUNT_WARNING=`$FILE_COUNT_WARNING | wc -l`
@@ -130,14 +135,16 @@ fi
 
 # ----------FILE COUNT TEST AND RETURN TO NAGIOS-----------
 
+[ "$MODE" == "time" ] && MODE="day"
+
 if [ $FILE_COUNT_CRITICAL -lt $NUMBER ]; then
-	echo "CRITICAL - $FILE_COUNT_CRITICAL files newer than $CRITICAL days in $DIRECTORY $MSGFIL $MSGEXT- Threshold is $NUMBER"
+	echo "CRITICAL - $FILE_COUNT_CRITICAL files newer than $CRITICAL ${MODE}s in $DIRECTORY $MSGFIL $MSGEXT- Threshold is $NUMBER"
 	exit $STATE_CRITICAL
 elif [ $FILE_COUNT_WARNING -lt $NUMBER ]; then
-	echo "WARNING - $FILE_COUNT_WARNING files newer than $WARNING days in $DIRECTORY $MSGFIL $MSGEXT- Threshold is $NUMBER"
+	echo "WARNING - $FILE_COUNT_WARNING files newer than $WARNING ${MODE}s in $DIRECTORY $MSGFIL $MSGEXT- Threshold is $NUMBER"
 	exit $STATE_WARNING
 else
-	echo "OK - $FILE_COUNT_WARNING files newer than $WARNING days in $DIRECTORY $MSGFIL $MSGEXT- Threshold is $NUMBER"
+	echo "OK - $FILE_COUNT_WARNING files newer than $WARNING ${MODE}s in $DIRECTORY $MSGFIL $MSGEXT- Threshold is $NUMBER"
 	exit $STATE_OK
 fi
 

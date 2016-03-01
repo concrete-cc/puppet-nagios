@@ -42,6 +42,9 @@
 #   A name to filter for.
 #   Not required.
 #
+# [*mode*]
+#   days or minutes. Default is "days", "min" for this parameters activates "minutes" mode
+#
 # [*has_parent*]
 #   Whether this folder has a parent service dependency (eg a mount).
 #   Not required. Defaults to true.
@@ -98,6 +101,7 @@ define nagios::nrpe::file_ages (
   $number                 = '1',
   $extension              = '',
   $filter                 = '',
+  $mode                   = '',
   $has_parent             = false,
   $parent_host            = $::hostname,
   $parent_service         = '',
@@ -121,12 +125,17 @@ define nagios::nrpe::file_ages (
     ''      => '',
     default => "-f ${filter} "
   }
+  $mode_string = $mode ? {
+    ''      => '',
+    'min'   => '-m',
+    default => ''
+  }
 
   # I will leave trailing _ but this is by far the easiest way to get this to
   # work.
   $command_name = "check_file_ages_${directory}_${extension}_${filter}"
 
-  $command = "command[${command_name}]=/usr/lib/nagios/plugins/check_file_ages.sh -w ${warning} ${recurse_string}-c ${critical} -t ${type} -d ${directory} -a ${number} ${extension_string} ${filter_string}"
+  $command = "command[${command_name}]=/usr/lib/nagios/plugins/check_file_ages.sh -w ${warning} ${recurse_string}-c ${critical} -t ${type} -d ${directory} -a ${number} ${extension_string} ${filter_string} ${mode_string}"
 
   $service_description = "${nagios_alias}_${command_name}"
 
@@ -152,12 +161,12 @@ define nagios::nrpe::file_ages (
     :
       dependent_host_name           => $nagios_alias,
       dependent_service_description => $service_description,
-      host_name => $parent_host,
+      host_name                     => $parent_host,
       service_description           => $parent_service,
       execution_failure_criteria    => 'c',
       notification_failure_criteria => 'c',
-      target    => "/etc/nagios3/conf.d/puppet/service_dependencies_${nagios_alias}.cfg",
-      tag       => $monitoring_environment,
+      target                        => "/etc/nagios3/conf.d/puppet/service_dependencies_${nagios_alias}.cfg",
+      tag                           => $monitoring_environment,
     }
   }
 
