@@ -1,4 +1,4 @@
-# == Class: nagios::nrpe::reboot
+# == Class: nagios::nrpe::postfix_queue
 #
 # Checks if a postfix server has too many emails waiting in a mail queue.
 #
@@ -28,8 +28,8 @@
 #
 # === Authors
 #
-# Ben Field <ben.field@concreteplatform.net
-class nagios::nrpe::reboot (
+# Ben Field <ben.field@concreteplatform.net>
+class nagios::nrpe::postfix_queue (
   $warning                = '5',
   $critical               = '10',
   $monitoring_environment = $::nagios::nrpe::config::monitoring_environment,
