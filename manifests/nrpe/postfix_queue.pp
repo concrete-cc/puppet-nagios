@@ -63,7 +63,7 @@ class nagios::nrpe::postfix_queue (
     use                 => $nagios_service,
     host_name           => $nagios_alias,
     target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
-    service_description => "${nagios_alias}_check_reboot",
+    service_description => "${nagios_alias}_check_postfix_queue",
     tag                 => $monitoring_environment,
   }
 
