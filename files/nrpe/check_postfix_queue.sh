@@ -71,7 +71,7 @@ fi
 
 # ----------EMAILS CALCULATION-----------
 
-EMAILS=`$(mailq | egrep -c "^[A-F0-9]{12}")`
+EMAILS=`mailq | egrep -c "^[A-F0-9]{12}"`
 
 # ----------LOW MEMORY TEST AND RETURN TO NAGIOS-----------
 
