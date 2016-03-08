@@ -34,7 +34,7 @@ class nagios::nrpe::postfix_queue (
   $critical               = '10',
   $monitoring_environment = $::nagios::nrpe::config::monitoring_environment,
   $nagios_service         = $::nagios::nrpe::config::nagios_service,
-  $nagios_alias           = $::hostname,) {
+  $nagios_alias           = $::hostname) {
   require nagios::nrpe::config
   include nagios::nrpe::service
 
