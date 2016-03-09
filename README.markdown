@@ -173,3 +173,5 @@ Version:
 * 2.1: A refactor of nagios::nrpe::config to make it self sufficent. Also updated readme.
 * 2.2: A change to nagios::nrpe::config to reenable individual check overrides. Added json_file check.
 * 2.3: Added support for centos clients (not servers) and fixed a fairly large mistake with iostat where a requirement was impossible.
+* 2.4: Added a new check postfix_queue, which will check the length of a postfix queue.
+* 2.5: Updated diskspace to be able to take options as a hash from hiera. Also allowed it to run a command on a full disk. May cause issues with backwards compatibility if you were previously overriding values with enc facts.

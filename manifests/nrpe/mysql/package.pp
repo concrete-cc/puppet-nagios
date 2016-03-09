@@ -14,8 +14,10 @@
 #
 # Ben Field <ben.field@concreteplatform.com>
 class nagios::nrpe::mysql::package {
-
   package { 'percona-nagios-plugins': ensure => installed, }
 
-  user { 'nagios': groups => ['mysql'], }
+  user { 'nagios_mysql':
+    name   => 'nagios',
+    groups => ['mysql'],
+  }
 }

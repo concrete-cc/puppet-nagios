@@ -12,6 +12,11 @@
 #
 # === Parameters
 #
+#
+# [*options_hash*]
+#   This will pass options to the diskcheck defines.
+#   It should have keys for the drive name you wish to supply details to.
+#
 # [*monitoring_environment*]
 #   This is the environment that the check will be submitted for. This will
 #   default to the value set by nagios::nrpe::config but can be overridden here.
@@ -44,6 +49,9 @@
 #
 # Ben Field <ben.field@concreteplatform.com>
 class nagios::nrpe::diskspace (
+  $options_hash           = {
+  }
+  ,
   $monitoring_environment = $::nagios::nrpe::config::monitoring_environment,
   $nagios_service         = $::nagios::nrpe::config::nagios_service,
   $nagios_alias           = $::hostname) {
@@ -60,17 +68,20 @@ class nagios::nrpe::diskspace (
     notify => Service[nrpe],
   }
 
-  $drive = split($::used_blockdevices, ',')
+  $drives = split($::used_blockdevices, ',')
 
-  nagios::nrpe::blockdevice::diskspace { $drive:
-    monitoring_environment => $monitoring_environment,
-    nagios_service         => $nagios_service,
-    nagios_alias           => $nagios_alias,
-    require                => File_Line['check_disk_default'],
+  $drives.each |String $drive| {
+    nagios::nrpe::blockdevice::diskspace { $drive:
+      monitoring_environment => $monitoring_environment,
+      nagios_service         => $nagios_service,
+      nagios_alias           => $nagios_alias,
+      options_hash           => $options_hash[$drive],
+      require                => File_Line['check_disk_default'],
+    }
   }
 
   if $::lvm == true {
-    $excludedDrives = join(prefix($drive, '-I '), ' ')
+    $excludedDrives = join(prefix($drives, '-I '), ' ')
 
     file_line { 'check_LVM_diskspace':
       ensure => present,
