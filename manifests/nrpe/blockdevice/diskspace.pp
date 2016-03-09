@@ -139,9 +139,24 @@ define nagios::nrpe::blockdevice::diskspace (
   }
 
   if $options_hash['command'] {
+    
+    $final_restart_command = $options_hash['command']
+    
+    #bit nasty but reusing preexisting template
+    file { "${drive}_command.sh":
+      ensure  => present,
+      path    => "/usr/lib/nagios/eventhandlers/${drive}_command.sh",
+      content => template('nagios/nrpe/restart_service.conf.erb'),
+      owner   => 'nagios',
+      group   => 'nagios',
+      mode    => '0755',
+      before  => File_line["${drive}_command"],
+      require => File['/usr/lib/nagios/eventhandlers'],
+    }
+    
     file_line { "${drive}_command":
       ensure => present,
-      line   => "command[${drive}_command]=${options_hash['command']}",
+      line   => "command[${drive}_command]=/usr/lib/nagios/eventhandlers/${drive}_command.sh",
       path   => '/etc/nagios/nrpe_local.cfg',
       notify => Service['nrpe'],
     }
