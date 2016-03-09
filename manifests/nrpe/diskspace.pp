@@ -12,6 +12,11 @@
 #
 # === Parameters
 #
+#
+# [*options_hash*]
+#   This will pass options to the diskcheck defines.
+#   It should have keys for the drive name you wish to supply details to.
+#
 # [*monitoring_environment*]
 #   This is the environment that the check will be submitted for. This will
 #   default to the value set by nagios::nrpe::config but can be overridden here.
@@ -44,6 +49,7 @@
 #
 # Ben Field <ben.field@concreteplatform.com>
 class nagios::nrpe::diskspace (
+  $options_hash           = {},
   $monitoring_environment = $::nagios::nrpe::config::monitoring_environment,
   $nagios_service         = $::nagios::nrpe::config::nagios_service,
   $nagios_alias           = $::hostname) {
