@@ -38,7 +38,10 @@ class nagios::nrpe::postfix_queue (
   require nagios::nrpe::config
   include nagios::nrpe::service
 
-  user { 'nagios': groups => ['postfix'], }
+  user { 'nagios_postfix':
+    name   => 'nagios',
+    groups => ['postfix'],
+  }
 
   file { 'check_postfix_queue.sh':
     ensure => present,
