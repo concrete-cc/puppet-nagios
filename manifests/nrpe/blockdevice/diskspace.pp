@@ -59,7 +59,8 @@
 #
 # [*critical*]
 #   The % of the diskspace to trigger the critical level at. This is calculated
-#   by the above table, with a potential override from $options_hash['critical'].
+#   by the above table, with a potential override from
+#   $options_hash['critical'].
 #
 # [*drive*]
 #   An override for the nagios service description so that xvda shows as sysvol.
@@ -139,10 +140,21 @@ define nagios::nrpe::blockdevice::diskspace (
     $drive = $name
   }
 
-  if $event_handler == true {
+  if ($options_hash['command'] == '' or $options_hash['command'] == nil or 
+  $options_hash['command'] == undef) {
+    @@nagios_service { "check_${drive}_space_${nagios_alias}":
+      check_command       => "check_nrpe_1arg!check_${name}_diskspace",
+      use                 => $nagios_service,
+      host_name           => $nagios_alias,
+      target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
+      service_description => "${nagios_alias}_check_${drive}_space",
+      tag                 => $monitoring_environment,
+    }
+
+  } else {
     file_line { "${drive}_command":
       ensure => present,
-      line   => "command[${drive}_command]=${command}",
+      line   => "command[${drive}_command]=${options_hash['command']}",
       path   => '/etc/nagios/nrpe_local.cfg',
       notify => Service['nrpe'],
     }
@@ -155,16 +167,6 @@ define nagios::nrpe::blockdevice::diskspace (
       service_description => "${nagios_alias}_check_${drive}_space",
       tag                 => $monitoring_environment,
       event_handler       => "event_handler!${drive}_command",
-    }
-
-  } else {
-    @@nagios_service { "check_${drive}_space_${nagios_alias}":
-      check_command       => "check_nrpe_1arg!check_${name}_diskspace",
-      use                 => $nagios_service,
-      host_name           => $nagios_alias,
-      target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
-      service_description => "${nagios_alias}_check_${drive}_space",
-      tag                 => $monitoring_environment,
     }
 
   }

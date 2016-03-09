@@ -49,7 +49,9 @@
 #
 # Ben Field <ben.field@concreteplatform.com>
 class nagios::nrpe::diskspace (
-  $options_hash           = {},
+  $options_hash           = {
+  }
+  ,
   $monitoring_environment = $::nagios::nrpe::config::monitoring_environment,
   $nagios_service         = $::nagios::nrpe::config::nagios_service,
   $nagios_alias           = $::hostname) {
