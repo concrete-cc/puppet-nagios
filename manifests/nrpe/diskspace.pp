@@ -68,18 +68,20 @@ class nagios::nrpe::diskspace (
     notify => Service[nrpe],
   }
 
-  $drive = split($::used_blockdevices, ',')
+  $drives = split($::used_blockdevices, ',')
 
-  nagios::nrpe::blockdevice::diskspace { $drive:
-    monitoring_environment => $monitoring_environment,
-    nagios_service         => $nagios_service,
-    nagios_alias           => $nagios_alias,
-    options_hash           => $options_hash[$drive],
-    require                => File_Line['check_disk_default'],
+  drives.each |String $drive| {
+    nagios::nrpe::blockdevice::diskspace { $drive:
+      monitoring_environment => $monitoring_environment,
+      nagios_service         => $nagios_service,
+      nagios_alias           => $nagios_alias,
+      options_hash           => $options_hash[$drive],
+      require                => File_Line['check_disk_default'],
+    }
   }
 
   if $::lvm == true {
-    $excludedDrives = join(prefix($drive, '-I '), ' ')
+    $excludedDrives = join(prefix($drives, '-I '), ' ')
 
     file_line { 'check_LVM_diskspace':
       ensure => present,
