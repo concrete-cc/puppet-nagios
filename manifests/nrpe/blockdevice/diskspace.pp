@@ -139,16 +139,6 @@ define nagios::nrpe::blockdevice::diskspace (
   }
 
   if $options_hash['command'] {
-    @@nagios_service { "check_${drive}_space_${nagios_alias}":
-      check_command       => "check_nrpe_1arg!check_${name}_diskspace",
-      use                 => $nagios_service,
-      host_name           => $nagios_alias,
-      target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
-      service_description => "${nagios_alias}_check_${drive}_space",
-      tag                 => $monitoring_environment,
-    }
-
-  } else {
     file_line { "${drive}_command":
       ensure => present,
       line   => "command[${drive}_command]=${options_hash['command']}",
@@ -164,6 +154,16 @@ define nagios::nrpe::blockdevice::diskspace (
       service_description => "${nagios_alias}_check_${drive}_space",
       tag                 => $monitoring_environment,
       event_handler       => "event_handler!${drive}_command",
+    }
+
+  } else {
+    @@nagios_service { "check_${drive}_space_${nagios_alias}":
+      check_command       => "check_nrpe_1arg!check_${name}_diskspace",
+      use                 => $nagios_service,
+      host_name           => $nagios_alias,
+      target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
+      service_description => "${nagios_alias}_check_${drive}_space",
+      tag                 => $monitoring_environment,
     }
 
   }

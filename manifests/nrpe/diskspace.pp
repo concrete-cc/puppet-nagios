@@ -70,7 +70,7 @@ class nagios::nrpe::diskspace (
 
   $drives = split($::used_blockdevices, ',')
 
-  drives.each |String $drive| {
+  $drives.each |String $drive| {
     nagios::nrpe::blockdevice::diskspace { $drive:
       monitoring_environment => $monitoring_environment,
       nagios_service         => $nagios_service,
