@@ -157,6 +157,7 @@ define nagios::nrpe::blockdevice::diskspace (
     file_line { "${drive}_command":
       ensure => present,
       line   => "command[${drive}_command]=/usr/lib/nagios/eventhandlers/${drive}_command.sh",
+      match  => "command\[${drive}_command\]",
       path   => '/etc/nagios/nrpe_local.cfg',
       notify => Service['nrpe'],
     }

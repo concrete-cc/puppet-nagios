@@ -70,7 +70,7 @@
 # [*monitoring_environment*]
 #   This is the environment that the check will be submitted for. This will
 #   default to the value set by nagios::nrpe::config but can be overridden here.
-#   Not required. 
+#   Not required.
 #
 # [*nagios_service*]
 #   This is the generic service that this check will implement. This should
@@ -174,6 +174,7 @@ define nagios::nrpe::process (
     file_line { "restart_${process}":
       ensure => present,
       line   => "command[restart_${process}]=/usr/lib/nagios/eventhandlers/restart_${process}.sh",
+      match  => "command\[restart_${process}\]",
       path   => '/etc/nagios/nrpe_local.cfg',
       notify => Service['nrpe'],
     }
