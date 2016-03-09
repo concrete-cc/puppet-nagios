@@ -85,8 +85,7 @@ define nagios::nrpe::blockdevice::diskspace (
   # variable in the name.
   $size = getvar("::blockdevice_${name}_size")
 
-  if ($options_hash['warning'] == '' or $options_hash['warning'] == nil or 
-  $options_hash['warning'] == undef) {
+  if $options_hash['warning'] {
     # Going to have a different check for very large disks ( gt 100GB) and
     # huge disks (gt 1TB)
     if $size > 15 * 1024 * 1024 * 1024 * 1024 {
@@ -105,8 +104,7 @@ define nagios::nrpe::blockdevice::diskspace (
     $warning = $options_hash['warning']
   }
 
-  if ($options_hash['critical'] == '' or $options_hash['critical'] == nil or 
-  $options_hash['critical'] == undef) {
+  if $options_hash['critical'] {
     # Going to have a different check for very large disks ( gt 100GB) and
     # huge disks (gt 1TB)
     if $size > 15 * 1024 * 1024 * 1024 * 1024 {
@@ -140,8 +138,7 @@ define nagios::nrpe::blockdevice::diskspace (
     $drive = $name
   }
 
-  if ($options_hash['command'] == '' or $options_hash['command'] == nil or 
-  $options_hash['command'] == undef) {
+  if $options_hash['command'] {
     @@nagios_service { "check_${drive}_space_${nagios_alias}":
       check_command       => "check_nrpe_1arg!check_${name}_diskspace",
       use                 => $nagios_service,
