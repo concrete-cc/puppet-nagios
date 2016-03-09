@@ -74,6 +74,7 @@ class nagios::nrpe::diskspace (
     monitoring_environment => $monitoring_environment,
     nagios_service         => $nagios_service,
     nagios_alias           => $nagios_alias,
+    options_hash           => $options_hash[$drive],
     require                => File_Line['check_disk_default'],
   }
 
