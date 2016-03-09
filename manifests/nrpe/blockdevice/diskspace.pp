@@ -24,7 +24,7 @@
 #
 # [*options_hash*]
 #   This will pass options to the diskcheck.
-#   It can take 3 keys:
+#   It can take 4 keys:
 #   warning: This will override the warning level and should be an integer
 #   value.
 #   critical: This will override the critical level and should be an integer
@@ -32,6 +32,7 @@
 #   command: This will create an event handler that will run this command. Could
 #   be useful for a tricky folder that sometimes fills up. (Generally try to
 #   solve this with logrotate rules etc!)
+#   sudo_required: Whether to escalate to root for the command.
 #
 # [*monitoring_environment*]
 #   This is the environment that the check will be submitted for. This will
@@ -139,10 +140,22 @@ define nagios::nrpe::blockdevice::diskspace (
   }
 
   if $options_hash['command'] {
-    
-    $final_restart_command = $options_hash['command']
-    
-    #bit nasty but reusing preexisting template
+    if $options_hash[sudo_required] == true {
+      # add nagios to sudoers so it can run $restart_command}
+      file_line { "${drive}_command_sudoers":
+        ensure => present,
+        line   => "nagios ALL=(ALL) NOPASSWD: ${options_hash['command']}",
+        path   => '/etc/sudoers',
+        before => File_line["${drive}_command"],
+      }
+
+      $final_restart_command = "sudo ${options_hash['command']}"
+
+    } else {
+      $final_restart_command = $options_hash['command']
+    }
+
+    # bit nasty but reusing preexisting template
     file { "${drive}_command.sh":
       ensure  => present,
       path    => "/usr/lib/nagios/eventhandlers/${drive}_command.sh",
@@ -153,7 +166,7 @@ define nagios::nrpe::blockdevice::diskspace (
       before  => File_line["${drive}_command"],
       require => File['/usr/lib/nagios/eventhandlers'],
     }
-    
+
     file_line { "${drive}_command":
       ensure => present,
       line   => "command[${drive}_command]=/usr/lib/nagios/eventhandlers/${drive}_command.sh",
