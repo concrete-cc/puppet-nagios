@@ -10,15 +10,15 @@ class nagios::nrpe::service {
   require nagios::nrpe::config
 
   case $::operatingsystem {
-    'Ubuntu'         : {
+    'Ubuntu'                   : {
       $service = ['nagios-nrpe-server']
     }
-    'RHEL', 'CentOS' : {
+    'RHEL', 'CentOS', 'RedHat' : {
       require epel
 
       $service = ['nrpe']
     }
-    default          : {
+    default                    : {
       err('Unsupported OS')
     }
   }

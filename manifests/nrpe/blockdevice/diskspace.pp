@@ -22,6 +22,18 @@
 # [*namevar*]
 #   This will provide the drive reference (ie xvda from xen machines).
 #
+# [*options_hash*]
+#   This will pass options to the diskcheck.
+#   It can take 4 keys:
+#   warning: This will override the warning level and should be an integer
+#   value.
+#   critical: This will override the critical level and should be an integer
+#   value.
+#   command: This will create an event handler that will run this command. Could
+#   be useful for a tricky folder that sometimes fills up. (Generally try to
+#   solve this with logrotate rules etc!)
+#   sudo_required: Whether to escalate to root for the command.
+#
 # [*monitoring_environment*]
 #   This is the environment that the check will be submitted for. This will
 #   default to the value set by nagios::nrpe::config but can be overridden here.
@@ -44,24 +56,12 @@
 #
 # [*warning*]
 #   The % of the diskspace to trigger the warning level at. This is calculated
-#   by the above table, with a potential override from $override_warning.
-#
-# [*warning*]
-#   The % of the diskspace to trigger the warning level at. This is calculated
-#   by the above table, with a potential override from $override_warning.
+#   by the above table, with a potential override from $options_hash['warning'].
 #
 # [*critical*]
 #   The % of the diskspace to trigger the critical level at. This is calculated
-#   by the above table, with a potential override from $override_warning.
-#
-# [*override_warning*]
-#   This will override the warning level using the ::diskspace_namevar_warning.
-#   This should be an integer value defined in the ENC.
-#
-# [*override_warning*]
-#   This will override the critical level using the
-#   ::diskspace_namevar_critical.
-#   This should be an integer value defined in the ENC.
+#   by the above table, with a potential override from
+#   $options_hash['critical'].
 #
 # [*drive*]
 #   An override for the nagios service description so that xvda shows as sysvol.
@@ -76,6 +76,9 @@
 #
 # Ben Field <ben.field@concreteplatform.com>
 define nagios::nrpe::blockdevice::diskspace (
+  $options_hash           = {
+  }
+  ,
   $monitoring_environment = $::nagios::nrpe::config::monitoring_environment,
   $nagios_service         = $::nagios::nrpe::config::nagios_service,
   $nagios_alias           = $::hostname) {
@@ -83,15 +86,9 @@ define nagios::nrpe::blockdevice::diskspace (
   # variable in the name.
   $size = getvar("::blockdevice_${name}_size")
 
-  # This has to use a getvar method to return a fact containing another
-  # variable in the name. The fact will be defined through the ENC.
-  $override_warning = getvar("::diskspace_${name}_warning")
-
-  # This has to use a getvar method to return a fact containing another
-  # variable in the name. The fact will be defined through the ENC.
-  $override_critical = getvar("::diskspace_${name}_critical")
-
-  if ($override_warning == '' or $override_warning == nil or $override_warning == undef) {
+  if $options_hash['warning'] {
+    $warning = $options_hash['warning']
+  } else {
     # Going to have a different check for very large disks ( gt 100GB) and
     # huge disks (gt 1TB)
     if $size > 15 * 1024 * 1024 * 1024 * 1024 {
@@ -106,11 +103,11 @@ define nagios::nrpe::blockdevice::diskspace (
     } else {
       $warning = '20'
     }
-  } else {
-    $warning = $override_warning
   }
 
-  if ($override_critical == '' or $override_critical == nil or $override_critical == undef) {
+  if $options_hash['critical'] {
+    $critical = $options_hash['critical']
+  } else {
     # Going to have a different check for very large disks ( gt 100GB) and
     # huge disks (gt 1TB)
     if $size > 15 * 1024 * 1024 * 1024 * 1024 {
@@ -125,8 +122,6 @@ define nagios::nrpe::blockdevice::diskspace (
     } else {
       $critical = '10'
     }
-  } else {
-    $critical = $override_critical
   }
 
   file_line { "check_${name}_diskspace":
@@ -144,13 +139,62 @@ define nagios::nrpe::blockdevice::diskspace (
     $drive = $name
   }
 
-  @@nagios_service { "check_${drive}_space_${nagios_alias}":
-    check_command       => "check_nrpe_1arg!check_${name}_diskspace",
-    use                 => $nagios_service,
-    host_name           => $nagios_alias,
-    target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
-    service_description => "${nagios_alias}_check_${drive}_space",
-    tag                 => $monitoring_environment,
+  if $options_hash['command'] {
+    if $options_hash[sudo_required] == true {
+      # add nagios to sudoers so it can run $restart_command}
+      file_line { "${drive}_command_sudoers":
+        ensure => present,
+        line   => "nagios ALL=(ALL) NOPASSWD: ${options_hash['command']}",
+        path   => '/etc/sudoers',
+        before => File_line["${drive}_command"],
+      }
+
+      $final_restart_command = "sudo ${options_hash['command']}"
+
+    } else {
+      $final_restart_command = $options_hash['command']
+    }
+
+    # bit nasty but reusing preexisting template
+    file { "${drive}_command.sh":
+      ensure  => present,
+      path    => "/usr/lib/nagios/eventhandlers/${drive}_command.sh",
+      content => template('nagios/nrpe/restart_service.conf.erb'),
+      owner   => 'nagios',
+      group   => 'nagios',
+      mode    => '0755',
+      before  => File_line["${drive}_command"],
+      require => File['/usr/lib/nagios/eventhandlers'],
+    }
+
+    file_line { "${drive}_command":
+      ensure => present,
+      line   => "command[${drive}_command]=/usr/lib/nagios/eventhandlers/${drive}_command.sh",
+      match  => "command\[${drive}_command\]",
+      path   => '/etc/nagios/nrpe_local.cfg',
+      notify => Service['nrpe'],
+    }
+
+    @@nagios_service { "check_${drive}_space_${nagios_alias}":
+      check_command       => "check_nrpe_1arg!check_${name}_diskspace",
+      use                 => $nagios_service,
+      host_name           => $nagios_alias,
+      target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
+      service_description => "${nagios_alias}_check_${drive}_space",
+      tag                 => $monitoring_environment,
+      event_handler       => "event_handler!${drive}_command",
+    }
+
+  } else {
+    @@nagios_service { "check_${drive}_space_${nagios_alias}":
+      check_command       => "check_nrpe_1arg!check_${name}_diskspace",
+      use                 => $nagios_service,
+      host_name           => $nagios_alias,
+      target              => "/etc/nagios3/conf.d/puppet/service_${nagios_alias}.cfg",
+      service_description => "${nagios_alias}_check_${drive}_space",
+      tag                 => $monitoring_environment,
+    }
+
   }
 
 }
