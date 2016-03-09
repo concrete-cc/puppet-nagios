@@ -86,6 +86,8 @@ define nagios::nrpe::blockdevice::diskspace (
   $size = getvar("::blockdevice_${name}_size")
 
   if $options_hash['warning'] {
+    $warning = $options_hash['warning']
+  } else {
     # Going to have a different check for very large disks ( gt 100GB) and
     # huge disks (gt 1TB)
     if $size > 15 * 1024 * 1024 * 1024 * 1024 {
@@ -100,11 +102,11 @@ define nagios::nrpe::blockdevice::diskspace (
     } else {
       $warning = '20'
     }
-  } else {
-    $warning = $options_hash['warning']
   }
 
   if $options_hash['critical'] {
+    $critical = $options_hash['critical']
+  } else {
     # Going to have a different check for very large disks ( gt 100GB) and
     # huge disks (gt 1TB)
     if $size > 15 * 1024 * 1024 * 1024 * 1024 {
@@ -119,8 +121,6 @@ define nagios::nrpe::blockdevice::diskspace (
     } else {
       $critical = '10'
     }
-  } else {
-    $critical = $options_hash['critical']
   }
 
   file_line { "check_${name}_diskspace":
