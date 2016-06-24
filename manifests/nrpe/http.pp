@@ -106,7 +106,7 @@ define nagios::nrpe::http (
       $command = 'check_http_nonroot_custom_port'
     }
 
-    @@nagios_service { "check_${health_check_uri}_at_${host}_${protocol}_on_${nagios_alias}"
+    @@nagios_service { "check_${health_check_uri}_at_${host}_${port}_${protocol}_on_${nagios_alias}"
     :
       check_command       => "${command}!${host}!${health_check_uri}!${port}",
       use                 => $nagios_service,
@@ -123,7 +123,7 @@ define nagios::nrpe::http (
       $command = 'check_http_custom_string_nonroot_custom_port'
     }
 
-    @@nagios_service { "check_${health_check_uri}_at_${host}_${protocol}_on_${nagios_alias}"
+    @@nagios_service { "check_${health_check_uri}_at_${host}_${port}_${protocol}_on_${nagios_alias}"
     :
       check_command       => "${command}!${host}!${health_check_uri}!${port}!${expect}",
       use                 => $nagios_service,
