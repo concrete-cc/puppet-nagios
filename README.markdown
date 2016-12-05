@@ -1,5 +1,7 @@
 #Nagios
 
+[![Join the chat at https://gitter.im/concrete-cc/puppet-nagios](https://badges.gitter.im/concrete-cc/puppet-nagios.svg)](https://gitter.im/concrete-cc/puppet-nagios?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 #### Table of contents
 
 1. [Overview](#overview)
